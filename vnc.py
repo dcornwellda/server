@@ -260,10 +260,33 @@ class VNCClient:
 
         try:
             # PointerEvent message: type(1) + button_mask(1) + x(2) + y(2)
-            msg = struct.pack('>BBHH', 6, 0, x, y)  # Type 6 = PointerEvent, no buttons pressed
+            msg = struct.pack('>BBHH', 5, 0, x, y)  # Type 5 = PointerEvent, no buttons pressed
             self.socket.send(msg)
         except Exception as e:
             raise RuntimeError(f"Mouse move failed: {str(e)}")
+
+    def _ensure_input_ready(self):
+        """Request framebuffer update to ensure server accepts input"""
+        if not self.connected or not self.socket:
+            return
+
+        try:
+            # Request incremental framebuffer update
+            update_req = struct.pack('>BBHHHH', 3, 1, 0, 0, self.width, self.height)
+            self.socket.send(update_req)
+
+            # Read the response
+            self.socket.settimeout(10)
+            total_data = b''
+            expected_size = 4 + 12 + (self.width * self.height * 4)
+
+            while len(total_data) < expected_size:
+                chunk = self.socket.recv(65536)
+                if not chunk:
+                    break
+                total_data += chunk
+        except:
+            pass  # Best effort - continue even if this fails
 
     def mouse_click(self, x: Optional[int] = None, y: Optional[int] = None, button: int = 1):
         """
@@ -281,19 +304,22 @@ class VNCClient:
             # Move mouse first if coordinates given
             if x is not None and y is not None:
                 self.mouse_move(x, y)
+                time.sleep(0.05)  # Small delay for server to process move
 
             # Convert button number to bitmask
             button_mask = 1 << (button - 1)
 
             # Send mouse down
-            msg = struct.pack('>BBHH', 6, button_mask, x or 0, y or 0)
+            click_x = x if x is not None else 0
+            click_y = y if y is not None else 0
+            msg = struct.pack('>BBHH', 5, button_mask, click_x, click_y)  # Type 5 = PointerEvent
             self.socket.send(msg)
 
-            # Small delay
-            time.sleep(0.05)
+            # Delay for device to register click
+            time.sleep(0.15)
 
             # Send mouse up
-            msg = struct.pack('>BBHH', 6, 0, x or 0, y or 0)
+            msg = struct.pack('>BBHH', 5, 0, click_x, click_y)  # Type 5 = PointerEvent
             self.socket.send(msg)
 
         except Exception as e:
@@ -306,7 +332,7 @@ class VNCClient:
 
         try:
             button_mask = 1 << (button - 1)
-            msg = struct.pack('>BBHH', 6, button_mask, 0, 0)
+            msg = struct.pack('>BBHH', 5, button_mask, 0, 0)  # Type 5 = PointerEvent
             self.socket.send(msg)
         except Exception as e:
             raise RuntimeError(f"Mouse down failed: {str(e)}")
@@ -317,7 +343,7 @@ class VNCClient:
             raise ConnectionError("Not connected to VNC server")
 
         try:
-            msg = struct.pack('>BBHH', 6, 0, 0, 0)
+            msg = struct.pack('>BBHH', 5, 0, 0, 0)  # Type 5 = PointerEvent
             self.socket.send(msg)
         except Exception as e:
             raise RuntimeError(f"Mouse up failed: {str(e)}")

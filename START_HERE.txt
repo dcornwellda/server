@@ -1,0 +1,167 @@
+# START HERE - Remote Instrument Server
+
+## 📦 What You Have
+
+A complete FastAPI server for remote control of:
+- **Keithley 2015** Multimeter (GPIB/USB/Serial)
+- **QA402** Audio Analyzer (REST API)
+
+## 🚀 Three Steps to Get Running
+
+### 1. Run Setup (First Time Only)
+Double-click: **setup.bat**
+
+This will install all required Python packages.
+
+### 2. Start the Server
+Double-click: **start_server.bat**
+
+Server will start at: http://localhost:8000
+
+### 3. Open Documentation
+Open browser: **http://localhost:8000/docs**
+
+Interactive API documentation with "Try it out" buttons!
+
+## 📁 File Structure
+
+```
+instrument_server/
+│
+├── 📄 start_server.bat      ← Double-click to start server
+├── 📄 setup.bat             ← Double-click for first-time setup
+├── 📄 QUICKSTART.md         ← 5-minute quick start guide
+├── 📄 README.md             ← Full documentation
+│
+├── 📄 main.py               ← Server entry point
+├── 📄 requirements.txt      ← Python dependencies
+├── 📄 example_client.py     ← Python client examples
+│
+├── 📁 api/                  ← API endpoints
+│   ├── keithley_routes.py   (Keithley REST API)
+│   └── qa402_routes.py      (QA402 REST API)
+│
+├── 📁 services/             ← Business logic
+│   ├── keithley_service.py
+│   └── qa402_service.py
+│
+└── 📁 devices/              ← Instrument drivers
+    ├── keithley2015.py      (VISA driver)
+    └── qa402.py             (REST client)
+```
+
+## ⚡ Quick Test
+
+After starting the server, test the connection:
+
+### Keithley Test
+1. Go to: http://localhost:8000/docs
+2. Find: **POST /keithley/connect**
+3. Click "Try it out"
+4. Enter your GPIB address (e.g., "GPIB0::15::INSTR")
+5. Click "Execute"
+
+### QA402 Test
+1. **Start QA402 application first!**
+2. Find: **POST /qa402/connect**
+3. Click "Try it out"
+4. Click "Execute"
+
+## 🌐 Remote Access
+
+To access from your local PC:
+
+1. Find your remote PC's IP address:
+   ```cmd
+   ipconfig
+   ```
+
+2. On local PC, open browser:
+   ```
+   http://<remote-pc-ip>:8000/docs
+   ```
+
+3. If connection fails, allow port 8000 in Windows Firewall:
+   ```cmd
+   netsh advfirewall firewall add rule name="Instrument Server" dir=in action=allow protocol=TCP localport=8000
+   ```
+
+## 📖 Documentation Files
+
+- **QUICKSTART.md** - Get started in 5 minutes
+- **README.md** - Complete documentation
+- **example_client.py** - Python client library and examples
+
+## 🔧 Finding Your Keithley Address
+
+Before connecting, you need to find your instrument's VISA address:
+
+```cmd
+python
+>>> import pyvisa
+>>> rm = pyvisa.ResourceManager()
+>>> print(rm.list_resources())
+```
+
+Look for something like:
+- `GPIB0::15::INSTR` (GPIB)
+- `USB0::0x05E6::0x2015::...::INSTR` (USB)
+- `ASRL1::INSTR` (Serial)
+
+## 📊 Example Measurements
+
+### Measure DC Voltage (Keithley)
+```
+POST /keithley/measure/voltage/dc
+Body: {"range_value": null}
+```
+
+### Get THD (QA402)
+```
+POST /qa402/data/thd
+Body: {"channel": "left"}
+```
+
+### Configure Generator (QA402)
+```
+POST /qa402/configure/generator
+Body: {
+  "frequency_hz": 1000,
+  "level_dbv": -10,
+  "enabled": true
+}
+```
+
+## ❓ Need Help?
+
+1. **Can't connect to Keithley?**
+   - Check NI-VISA is installed
+   - Verify GPIB address
+   - Test with NI MAX tool
+
+2. **Can't connect to QA402?**
+   - Make sure QA402 application is running
+   - Check http://localhost:9402 works
+
+3. **Can't access from remote PC?**
+   - Check Windows Firewall
+   - Verify both PCs on same network
+   - Test with http://<server-ip>:8000
+
+## 🎯 Next Steps
+
+1. ✅ Run setup.bat
+2. ✅ Start server with start_server.bat
+3. ✅ Open http://localhost:8000/docs
+4. ✅ Connect to instruments
+5. ✅ Try measurements
+6. ✅ Access from remote PC
+7. ✅ Use example_client.py for automation
+
+---
+
+**Ready to start?** → Double-click **setup.bat** then **start_server.bat**
+
+**Questions?** → Read **QUICKSTART.md** or **README.md**
+
+**Want automation?** → See **example_client.py**

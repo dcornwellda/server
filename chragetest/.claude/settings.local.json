@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"echo $PROFILE\")",
+      "Bash(powershell -Command \"$PROFILE\")",
+      "Bash(powershell -Command \"Write-Host $PROFILE\")",
+      "Bash(dir:*)",
+      "Bash(powershell -Command {$PROFILE})",
+      "WebSearch",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\dcorn\\Dropbox\\Matt share\\chragetest\\add_alias.ps1\")",
+      "Bash(del \"C:\\Users\\dcorn\\Dropbox\\Matt share\\chragetest\\add_alias.ps1\")",
+      "Bash(npm install)",
+      "Bash(python -m pip install:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(powershell -Command \"$env:APPDATA\\Claude\\claude_desktop_config.json\")",
+      "Bash(powershell:*)",
+      "mcp__vnc-controller__vnc_capture_screen",
+      "Bash(ping:*)",
+      "Bash(cmd /c \"type %APPDATA%\\Claude\\claude_desktop_config.json\")"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "vnc-controller"
+  ]
+}

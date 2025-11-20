@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "vnc-controller": {
+      "command": "python",
+      "args": ["C:\\Users\\dcorn\\Dropbox\\Matt share\\chragetest\\vnc-mcp-server\\server.py"],
+      "env": {
+        "VNC_HOST": "192.168.1.100",
+        "VNC_PORT": "5900",
+        "VNC_PASSWORD": "",
+        "VNC_PROTOCOL": "3.3",
+        "VNC_WIDTH": "480",
+        "VNC_HEIGHT": "272"
+      }
+    }
+  }
+}

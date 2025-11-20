@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from keithley_routes import router as keithley_router
 from qa402_routes import router as qa402_router
 from vnc_routes import router as vnc_router
+from fluke8845a_routes import router as fluke_router
 import uvicorn
 
 # Create FastAPI application
@@ -32,6 +33,7 @@ app.add_middleware(
 app.include_router(keithley_router)
 app.include_router(qa402_router)
 app.include_router(vnc_router)
+app.include_router(fluke_router)
 
 
 @app.get("/")
@@ -53,6 +55,10 @@ async def root():
             "vnc": {
                 "status": "available",
                 "endpoints": "/vnc/*"
+            },
+            "fluke_8845a": {
+                "status": "available",
+                "endpoints": "/fluke/*"
             }
         },
         "documentation": {
@@ -81,6 +87,7 @@ if __name__ == "__main__":
     print("\nInstruments:")
     print("  - Keithley 2015 Multimeter")
     print("  - QA402 Audio Analyzer")
+    print("  - Fluke 8845A Digital Multimeter")
     print("\nPress CTRL+C to stop the server")
     print("=" * 60)
     

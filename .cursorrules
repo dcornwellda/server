@@ -1,0 +1,231 @@
+# Cursor Rules for Remote Instrument Control Server
+
+## Project Overview
+This is a FastAPI-based REST API server for controlling test instruments remotely:
+- Keithley 2015 THD Multimeter (via GPIB/VISA)
+- QA402 Audio Analyzer (via REST API proxy)
+- VNC remote control
+
+## Architecture Principles
+
+### Layered Architecture
+- **Routes** (`*_routes.py`): FastAPI endpoint definitions, request/response models
+- **Services** (`*_service.py`): Business logic, error handling, data transformation
+- **Devices** (`*.py`): Low-level device drivers, VISA/GPIB communication, API clients
+
+### Separation of Concerns
+- Routes handle HTTP concerns (status codes, validation, serialization)
+- Services handle business logic and orchestration
+- Devices handle hardware/API communication only
+
+## Code Style & Standards
+
+### Python
+- Use Python 3.8+ features (type hints, f-strings, async/await)
+- Follow PEP 8 style guide
+- Use type hints for all function parameters and return values
+- Prefer async/await for I/O operations (network, GPIB)
+- Use Pydantic models for request/response validation
+
+### FastAPI Best Practices
+- Use Pydantic models for request bodies and responses
+- Include comprehensive docstrings for all endpoints
+- Use appropriate HTTP status codes (200, 201, 400, 404, 500)
+- Return consistent JSON response structures
+- Use dependency injection for shared resources (instrument connections)
+
+### Error Handling
+- Always handle instrument connection errors gracefully
+- Return meaningful error messages with appropriate status codes
+- Log errors with context (instrument type, operation, error details)
+- Use try/except blocks around all hardware communication
+- Never expose internal errors to API clients (sanitize error messages)
+
+### Naming Conventions
+- Files: `snake_case.py`
+- Classes: `PascalCase`
+- Functions/methods: `snake_case`
+- Constants: `UPPER_SNAKE_CASE`
+- Private methods: `_leading_underscore`
+
+## Instrument Communication
+
+### VISA/GPIB (Keithley)
+- Always check connection status before operations
+- Use context managers or try/finally for resource cleanup
+- Handle VISA errors (timeouts, connection lost, invalid commands)
+- Include timeout values for all VISA operations
+- Validate VISA addresses before connection attempts
+
+### REST API (QA402)
+- Use `requests` library with proper error handling
+- Check response status codes
+- Handle connection timeouts and network errors
+- Validate base URLs before connection attempts
+
+### VNC
+- Handle VNC connection failures gracefully
+- Use appropriate timeouts for screen operations
+- Validate VNC server addresses
+
+## API Design
+
+### Endpoints
+- Use RESTful conventions (GET for read, POST for actions)
+- Group related endpoints under common prefixes (`/keithley/*`, `/qa402/*`)
+- Include health check and status endpoints
+- Provide clear, descriptive endpoint names
+
+### Request/Response Models
+- Always use Pydantic models for validation
+- Include field descriptions and examples
+- Validate ranges and constraints (e.g., frequency ranges, voltage limits)
+- Use Optional types for optional parameters
+
+### Documentation
+- Include docstrings for all endpoints describing:
+  - Purpose and usage
+  - Parameters
+  - Return values
+  - Possible errors
+- Use FastAPI's automatic OpenAPI documentation
+
+## Code Organization
+
+### Imports
+- Group imports: standard library, third-party, local
+- Use absolute imports for local modules
+- Keep imports at the top of files
+
+### Functions
+- Keep functions focused and single-purpose
+- Limit function length (prefer < 50 lines)
+- Extract complex logic into helper functions
+- Use descriptive function names
+
+### Classes
+- Use classes for device drivers and services
+- Implement proper initialization and cleanup
+- Use properties for computed values
+- Keep classes focused on a single responsibility
+
+## Testing Considerations
+
+### Test Structure
+- Test each layer independently (routes, services, devices)
+- Mock external dependencies (VISA, HTTP requests, VNC)
+- Test error conditions and edge cases
+- Include integration tests for full workflows
+
+### Test Data
+- Use realistic test data that matches instrument specifications
+- Test boundary conditions (min/max values, invalid inputs)
+- Test connection failures and timeouts
+
+## Security & Performance
+
+### Security
+- Never expose sensitive information in error messages
+- Validate all user inputs
+- Sanitize instrument addresses and URLs
+- Consider rate limiting for production use
+
+### Performance
+- Use async/await for concurrent operations
+- Implement connection pooling where applicable
+- Cache instrument status when appropriate
+- Optimize GPIB communication (batch commands when possible)
+
+## Common Patterns
+
+### Connection Management
+```python
+# Check connection before operations
+if not self.is_connected:
+    raise ConnectionError("Not connected to instrument")
+
+# Use try/finally for cleanup
+try:
+    result = self.instrument.measure()
+except VISAError as e:
+    raise InstrumentError(f"Measurement failed: {e}")
+finally:
+    # Cleanup if needed
+    pass
+```
+
+### Error Responses
+```python
+# Consistent error response format
+{
+    "error": "Error type",
+    "message": "Human-readable message",
+    "details": {}  # Optional additional context
+}
+```
+
+### Status Endpoints
+```python
+# Always include connection status
+{
+    "connected": bool,
+    "address": str,
+    "status": str,
+    "last_operation": str  # Optional
+}
+```
+
+## Dependencies
+
+### Core
+- `fastapi`: Web framework
+- `uvicorn`: ASGI server
+- `pydantic`: Data validation
+- `pyvisa`: VISA/GPIB communication
+- `requests`: HTTP client
+- `vncdotool`: VNC operations
+
+### Version Compatibility
+- Maintain compatibility with Python 3.8+
+- Pin dependency versions in requirements.txt
+- Test with latest stable versions
+
+## File Structure
+```
+server/
+├── main.py              # FastAPI app entry point
+├── *_routes.py          # API route definitions
+├── *_service.py         # Business logic
+├── *.py                 # Device drivers
+├── requirements.txt     # Dependencies
+└── README.md            # Documentation
+```
+
+## When Adding New Features
+
+1. **New Instrument**: Create device driver → service → routes
+2. **New Endpoint**: Add to appropriate routes file, update service if needed
+3. **New Measurement**: Add to device driver, expose through service and routes
+4. **Error Handling**: Add specific error types and handling at each layer
+
+## Code Review Checklist
+
+- [ ] Type hints on all functions
+- [ ] Pydantic models for request/response
+- [ ] Error handling for all instrument operations
+- [ ] Connection status checks
+- [ ] Docstrings on all endpoints
+- [ ] Appropriate HTTP status codes
+- [ ] Consistent error response format
+- [ ] Resource cleanup (connections, files)
+- [ ] Input validation
+- [ ] No hardcoded values (use constants or config)
+
+## Notes
+
+- This server is designed for trusted local networks
+- Instrument communication may be slow (GPIB: 10-50 measurements/sec)
+- Always handle timeouts appropriately
+- Log important operations for debugging
+- Keep instrument-specific logic in device drivers, not in routes
+
